@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Websocket Chatting</title>
+    <script>
+        const ws = new WebSocket("ws://localhost:8001")
+      
+        function sayHi() {
+          ws.send("Hello") // 서버에 데이터 전송
+        }
+        const setRequest = (targetServiceName, body) => {
+            return {
+                header: {
+                    targetServiceName,
+                    messageType: "REQUEST",
+                    contentType: "TEXT",
+                },
+                body: body,
+            };
+        };
+        function getProjectData() {
+          ws.send(JSON.stringify(setRequest("com.tmax.service.sourceCode.ListSrcService", {projectId: 1})));          
+        }
+        function getFileData() {
+          ws.send(JSON.stringify(setRequest("com.tmax.service.sourceCode.DetailSrcService", {srcId: 1})));          
+        }
+        
+        ws.onmessage = (event) => {
+            var elem = document.getElementById('message');
+            elem.textContent = event.data;
+        };
+      </script>
+  </head>
+  <body>
+    <h1>Hello Express</h1>
+    <button onClick="sayHi()">Say Hi</button>
+    <button onClick="getProjectData()">Get Project Data</button>
+    <button onClick="getFileData()">Get File Data</button>
+    <h1 id="message"></h1>
+  </body>
+</html>
