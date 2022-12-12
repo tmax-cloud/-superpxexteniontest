@@ -3,37 +3,62 @@ import * as vscode from 'vscode';
 import { MemFS } from './fileSystemProvider';
 import * as WebSocket from 'ws';
 
-const setRequest = (targetServiceName: string, srcId: number) => {
+const setRequest = (targetServiceName: string, body: object) => {
     return {
       header: {
         targetServiceName,
         messageType: "REQUEST",
         contentType: "TEXT",
       },
-      body: {
-        srcId: srcId,
-      },
+      body: body,
     };
   };
 
-export const getFilesFromDB = (memFs: MemFS, serverUrl: string) => {
+export const getFilesFromDB = (memFs: MemFS, serverUrl: string, projectId: number) => {
     //get files form server
     //...
-    // const request = setRequest("com.tmax.service.sourceCode.DetailSrcService", 1);
-    // const exampleSocket = new WebSocket(serverUrl);
-    // exampleSocket.onopen = (event: any) => {
-    //     exampleSocket.send(JSON.stringify(request));
-    //   };
-  
-    //   exampleSocket.onmessage = (event: any) => {
-    //     console.log(event.data);
-    //     const wsdata = JSON.parse(event.data);
-    //     const lineData: string [] = [];
-    //     wsdata.body.data.forEach((d: any) => {
-    //       lineData.push(d.content);
-    //     });        
-    //     memFs.writeFile(vscode.Uri.parse(`dbfs:/file.txt`), Buffer.from(lineData.join("")), { create: true, overwrite: true });
-    //   };
+    const projectSocket = new WebSocket(serverUrl);
+    projectSocket.onopen = (event: any) => {
+        projectSocket.send(JSON.stringify(setRequest("com.tmax.service.sourceCode.ListSrcService", {projectId: projectId})));
+    };
+
+    projectSocket.onmessage = (event: any) => {                
+        const projectWSdata = JSON.parse(event.data);
+
+        projectWSdata.forEach((d: any)=>{
+            const lineData: string [] = [];
+            const fileSocket = new WebSocket(serverUrl);
+            fileSocket.onopen = (event: any) => {
+                fileSocket.send(JSON.stringify(setRequest("com.tmax.service.sourceCode.DetailSrcService", {srcId: d.id})));
+            };
+          
+            fileSocket.onmessage = (event: any) => {                
+                const fileWsdata = JSON.parse(event.data);                
+                const lineData: string [] = [];
+                fileWsdata.body.data.forEach((d: any) => {
+                  lineData.push(d.content);
+                });
+                const directory = d.path.split('/');
+
+                directory.pop();            
+            
+                let temp = '/';        
+                directory.forEach((path: any)=>{
+                    temp = temp + path + '/';
+                    let existDirectory = false;
+                    try {
+                        memFs.readDirectory(vscode.Uri.parse(`dsfs:${temp}`));
+                        existDirectory = true;
+                    } catch {
+                        existDirectory = false;
+                    }            
+                    !existDirectory && memFs.createDirectory(vscode.Uri.parse(`dsfs:${temp}`));
+                });
+            
+                memFs.writeFile(vscode.Uri.parse(`dbfs:/${d.path}`), Buffer.from(lineData.join("")), { create: true, overwrite: true });
+            };
+        });
+    };
 
     const tempProjectReq = {        
         body: {

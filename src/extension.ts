@@ -29,6 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const dbFs = new MemFS();
 	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('dbfs', dbFs, { isCaseSensitive: true }));
 	let serverUrl = 'ws://192.168.9.74:8080';
+	let projectId = '1';
 
 	context.subscriptions.push(vscode.commands.registerCommand('memfs.reset', _ => {
 		for (const [name] of memFs.readDirectory(vscode.Uri.parse('memfs:/'))) {
@@ -97,16 +98,19 @@ export function activate(context: vscode.ExtensionContext) {
 			prompt: "Server url",
 			value: serverUrl
 		  }) as string;
-
 		vscode.window.showInformationMessage(serverUrl);
+		projectId = await vscode.window.showInputBox({
+			placeHolder: "Project ID",
+			prompt: "Project ID",
+			value: projectId
+		  }) as string;
+		vscode.window.showInformationMessage(projectId);
+
 		dbFs.writeFile(vscode.Uri.parse(`dbfs:/serverUrl.txt`), Buffer.from(serverUrl), { create: true, overwrite: true });
-		getFilesFromDB(dbFs, serverUrl as string);
+		getFilesFromDB(dbFs, serverUrl as string, Number(projectId));
 	}));
 
 	context.subscriptions.push(vscode.commands.registerCommand('memfs.initFromDB', _ => {
-
-		vscode.window.showInformationMessage(serverUrl);
-
 		vscode.workspace.updateWorkspaceFolders(0, 0, { uri: vscode.Uri.parse('dbfs:/'), name: "FromDB - Sample" });
 	}));
 }
