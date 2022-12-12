@@ -50,6 +50,11 @@ export const getFilesFromDB = (memFs: MemFS, serverUrl: string) => {
                 id: 2,
                 path: "src/test2",
                 projectId: 1
+            },
+            {
+                id: 3,
+                path: "src/temp/test3",
+                projectId: 1
             }
           ]
         }
@@ -96,27 +101,54 @@ export const getFilesFromDB = (memFs: MemFS, serverUrl: string) => {
                 }
               ]
             }
+          },
+          {            
+            body: {
+              path: "DetailSrcService",
+              statusCode: 200,
+              message: "success",
+              data: [
+                {
+                  id: 1,
+                  number: 1,
+                  content: "hello3",
+                  prevLineId: 0
+                },
+                {
+                  id: 2,
+                  number: 2,
+                  content: "world3",
+                  prevLineId: 1
+                }
+              ]
+            }
           }
           
     ];
       
-    tempProjectReq.body.data.forEach((d,idx)=>{
+    tempProjectReq.body.data.forEach(d=>{
         const lineData: string [] = [];
-        tempFileReq[idx].body.data.forEach((d: any) => {
+        tempFileReq[d.id-1].body.data.forEach((d: any) => {
             lineData.push(d.content);
           });
         const directory = d.path.split('/');
         directory.pop();
         
-        memFs.createDirectory(vscode.Uri.parse(`dsfs:/${idx}/`));
         
         let temp = '/';        
         directory.forEach((path)=>{
             temp = temp + path + '/';
-            memFs.createDirectory(vscode.Uri.parse(`dsfs:/${idx}${temp}`));
+            let existDirectory = false;
+            try {
+                memFs.readDirectory(vscode.Uri.parse(`dsfs:${temp}`));
+                existDirectory = true;
+            } catch {
+                existDirectory = false;
+            }            
+            !existDirectory && memFs.createDirectory(vscode.Uri.parse(`dsfs:${temp}`));
         });
         
-        memFs.writeFile(vscode.Uri.parse(`dbfs:/${idx}/${d.path}`), Buffer.from(lineData.join("")), { create: true, overwrite: true });
+        memFs.writeFile(vscode.Uri.parse(`dbfs:/${d.path}`), Buffer.from(lineData.join("")), { create: true, overwrite: true });
     });
       
     
