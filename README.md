@@ -1,8 +1,8 @@
 
 ### 0.0.2
-
-Initial release of ...
-
+- DBFS 명령어 추가
+  - DBFS: init DB fs
+  - DBFS: Get file from DB serverUrl
 
 ## 요구사항
  - 1.50.0 이상 vscode 요구됨
