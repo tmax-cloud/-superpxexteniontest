@@ -2,7 +2,6 @@
 - ws 에서 받은 데이터를 memfs(메모리 파일시스템) workspace 에 파일로 넣어주는 vscode extension
 https://marketplace.visualstudio.com/items?itemName=ParkHyowook.superpxextensiontest2
 
-
 ### 0.0.2
 - DBFS 명령어 추가
   - DBFS: init DB fs
@@ -20,7 +19,6 @@ https://marketplace.visualstudio.com/items?itemName=ParkHyowook.superpxextension
 4. DBFS: Get file from DB serverUrl 입력 창 뜸파일 생성됨
     1. ws server 필요
     2. github 의 app.js 로 ws 서버 구동가능
-
 
 ## 명령어 설명
 - DBFS: init DB fs - Worksapce 생성
